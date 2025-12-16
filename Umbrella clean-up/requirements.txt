@@ -1,0 +1,5 @@
+requests
+requests-oauthlib
+oauthlib
+python-dotenv
+msal
