@@ -1,37 +1,109 @@
-# Umbrella destination list exporter
+# Cisco Umbrella Destination Cleanup Tool
 
-This small utility fetches destination lists from an Umbrella-style API and exports the destinations (domains/URLs and creation timestamps) to CSV or Excel.
+A Python-based tool for safely identifying and removing stale domains and URLs from Cisco Umbrella destination lists, using Microsoft Defender for Endpoint telemetry as validation.
 
-Files added:
+Designed for security teams who want to clean up legacy blocks without breaking active protections.
 
-- `scripts/export_umbrella_list.py` — main script
-- `requirements.txt` — Python dependencies
-- `config_template.json` — example config file
+✨ Features
 
-Quick start
+Export any Umbrella destination list
 
-1. Create a config file (use `config_template.json` as a starting point). You must provide `lists_url` and `destinations_url_template` and any required `headers` for authentication. The template is pre-filled for Cisco Umbrella API v2.
+Filter entries by age (e.g. “created ≥ 180 days ago”)
 
-2. Create a virtualenv and install dependencies:
+Optional Defender cross-check
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+Identify safe deletion candidates
+
+Dry-run support before deletion
+
+Batch-safe Umbrella API deletion
+
+CSV + JSON outputs for auditability
+
+Uses .env for secrets
+
+🧠 Workflow
+
+Select Umbrella destination list
+
+Filter out recently created entries
+
+(Optional) Cross-check remaining entries against Defender
+
+Identify deletion candidates
+
+Dry-run deletion
+
+(Optional) Perform live deletion
+
+All thresholds are defined once and reused consistently.
+
+📁 Structure
+Umbrella clean-up/
+├── main.py
+├── scripts/
+│   ├── umbrella_list_overview.py
+│   ├── defender_crosscheck.py
+│   ├── destination_cleanup_selector.py
+│   └── umbrella_delete.py
+├── utils/
+│   ├── defender_auth.py
+│   └── timestamps.py
+├── .env
+├── requirements.txt
+└── README.md
+
+🔧 Requirements
+
+Python 3.10+
+
+Cisco Umbrella API credentials
+
+Microsoft Defender for Endpoint API access
+
+Install dependencies:
+
 pip install -r requirements.txt
-```
 
-3. Run the script:
+🔐 Environment Variables
 
-```powershell
-python .\scripts\export_umbrella_list.py --config .\config.json --output destinations.csv
-```
+Create a .env file (template without secrets is committed):
+
+# Cisco Umbrella
+UMBRELLA_CLIENT_ID=
+UMBRELLA_CLIENT_SECRET=
+
+# Microsoft Defender
+DEFENDER_TENANT_ID=
+DEFENDER_CLIENT_ID=
+DEFENDER_CLIENT_SECRET=
+DEFENDER_SCOPE=https://api.security.microsoft.com/.default
 
 
-Notes
+⚠️ Never commit real secrets.
 
-- This repository is configured to call Cisco Umbrella API v2 destination lists by default (the template uses `https://api.umbrella.com/policies/v2/destinationlists`). Umbrella v2 uses page & limit pagination (defaults to limit=100, max=100); the script detects and uses page-based pagination for these endpoints.
-- Authentication: Umbrella supports OAuth2 client credentials and Umbrella API keys. The simplest option for this script is to obtain a bearer token and place it in `config.json` under `headers.Authorization` as `Bearer <TOKEN>`. You can also implement the client credentials flow externally and supply the token in the config.
-- The script expects the lists endpoint to return a JSON array under `data` or `items`, or a top-level list. Each list should contain an `id` field. The destinations endpoint returns paginated `data` with destination objects.
-- Field mapping: the exporter looks for `destination`, `domain`, `url`, or `value` for the destination value and `created_at`, `createdAt`, `created`, `dateCreated` for timestamps. If Umbrella uses different fields in your org, update the script or supply a sample response and I will adapt the extractor.
+▶️ Usage
+python main.py
 
-If you want, I can wire the script to implement the OAuth2 client credentials flow (fetch token automatically from Umbrella) — tell me if you prefer the script to manage token acquisition or if you will provide a long-lived token in the config.
+
+The script runs interactively and guides you through the full cleanup process.
+
+🧪 Safety
+
+No deletion without confirmation
+
+Dry-run supported and recommended
+
+Double confirmation for live deletion
+
+Payloads match official Umbrella API specs
+
+UTC timestamps handled consistently
+
+📚 References
+
+Cisco Umbrella API
+https://developer.cisco.com/docs/cloud-security/
+
+Microsoft Defender Advanced Hunting
+https://learn.microsoft.com/microsoft-365/security/defender/
